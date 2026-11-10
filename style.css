@@ -1,0 +1,122 @@
+/* Turbo Racer 2D — identidade: placa de box (amarelo sinalização) sobre asfalto, zebras vermelho/branco */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--asf:#23262b;--asf2:#2f333a;--red:#d62828;--wht:#f5f5f0;--yel:#ffc300}
+html,body{height:100%;overflow:hidden;background:var(--asf);color:var(--wht);font-family:"Trebuchet MS",system-ui,sans-serif;user-select:none}
+canvas#game{position:fixed;inset:0;width:100%;height:100%}
+.hide{display:none!important}
+
+/* Telas */
+.screen{position:fixed;inset:0;display:none;flex-direction:column;align-items:flex-start;justify-content:center;gap:clamp(12px,3vh,26px);padding:clamp(20px,8vw,120px);background:var(--asf);z-index:5;overflow:auto}
+#tracks,#garage,#options,#result{background:rgba(35,38,43,.94)}
+.screen.on{display:flex;animation:in .5s cubic-bezier(.2,.8,.2,1)}
+@keyframes in{from{opacity:0;transform:translateX(-40px)}}
+/* zebra lateral vermelho/branco */
+.screen::before{content:"";position:fixed;left:0;top:0;bottom:0;width:18px;background:repeating-linear-gradient(180deg,var(--red) 0 36px,var(--wht) 36px 72px);animation:kerb 1.2s linear infinite}
+@keyframes kerb{to{background-position:0 72px}}
+
+h1{font:italic 900 clamp(3rem,13vw,8rem)/.9 "Arial Black",Impact,sans-serif;letter-spacing:-.03em;color:var(--wht)}
+h2{font:italic 900 clamp(1.8rem,5vw,3rem) "Arial Black",Impact,sans-serif}
+.hint{opacity:.65;font-size:.9rem;max-width:46ch}
+nav,.row{display:flex;gap:14px;flex-wrap:wrap}
+nav{flex-direction:column}
+
+/* Botões: chapa amarela com sombra dura */
+button{font:inherit;font-weight:700;color:#111;background:var(--yel);border:0;border-radius:6px;padding:.75em 1.6em;cursor:pointer;box-shadow:4px 4px 0 #000;transition:transform .12s,box-shadow .12s}
+button:hover:not(:disabled){transform:translate(-2px,-2px);box-shadow:6px 6px 0 #000}
+button:active:not(:disabled){transform:translate(3px,3px);box-shadow:1px 1px 0 #000}
+button:focus-visible,input:focus-visible{outline:3px solid var(--wht);outline-offset:3px}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.sel{background:var(--wht)}
+button.danger{background:var(--red);color:#fff}
+nav button{font-size:1.5rem;min-width:260px;text-align:left}
+
+/* Pistas */
+.cards{display:flex;gap:18px;flex-wrap:wrap}
+.card{width:min(270px,80vw);height:170px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;text-align:left;color:#fff}
+.card b{font-size:1.25rem}.card small{font-weight:400;opacity:.9}
+.c0{background:#2f7a35;color:#fff}.c1{background:#245f31;color:#fff}.c2{background:#8c2f2f;color:#fff}
+
+/* Resultado: classificação final */
+.rl{list-style:none;width:min(520px,100%);max-height:38vh;overflow:auto;background:rgba(0,0,0,.35);border-left:5px solid var(--yel);border-radius:4px}
+.rl li{display:grid;grid-template-columns:2.4em 1fr auto;gap:10px;padding:5px 12px;font-size:.95rem}
+.rl li:nth-child(odd){background:rgba(255,255,255,.05)}
+.rl li.me{background:var(--yel);color:#111;font-weight:700}
+.rl em{font-style:normal;opacity:.8}
+#rInfo{max-width:60ch}
+
+/* Garagem */
+.coins{font-size:1.4rem;color:var(--yel);font-weight:700}
+#prev{background:var(--asf2);border-radius:8px}
+.up{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.up span{min-width:230px}
+.lv{display:flex;gap:4px}
+.lv i,.lv u{width:22px;height:12px;border-radius:2px;background:var(--yel);text-decoration:none}
+.lv u{background:#454a52}
+input[type=color]{width:56px;height:36px;border:0;background:none;cursor:pointer}
+
+/* HUD */
+#hud{position:fixed;inset:0;pointer-events:none;z-index:3;font-weight:700}
+#hud .b{position:absolute;background:rgba(20,22,26,.78);border-left:5px solid var(--yel);border-radius:4px;padding:8px 14px;font-size:clamp(.9rem,2.4vw,1.3rem)}
+#hPos{top:12px;left:12px;font-size:clamp(1.3rem,4vw,2rem)!important}
+#hLap{top:12px;left:50%;transform:translateX(-50%)}
+#hTime{top:12px;right:12px}
+#hCoins{top:62px;right:12px;color:var(--yel)}
+#mini{position:absolute;left:12px;bottom:14px;width:clamp(110px,22vw,190px);height:auto;background:rgba(20,22,26,.78);border-left:5px solid var(--yel);border-radius:4px}
+/* Velocímetro (SVG): arco 0–10 com zona vermelha 8–10, ponteiro, marcha no centro, KM/H e dígitos com zeros à esquerda em cinza */
+#spd{bottom:14px;right:14px;width:clamp(140px,17vw,220px);padding:8px 12px 4px!important;line-height:0;background:rgba(5,6,8,.94)!important;border-left:0!important;border-radius:16px!important;box-shadow:0 4px 16px rgba(0,0,0,.5)}   /* painel preto, sem a faixa amarela */
+#spd svg{display:block;width:100%;height:auto;overflow:visible}
+#spd .tk text{font:italic 600 22px "Trebuchet MS",system-ui,sans-serif;fill:#9a9ca3;text-anchor:middle;dominant-baseline:central}
+#spd .tk text.r{fill:#ff3b3b}
+#spd .gear{font:italic 900 56px "Arial Black",Impact,sans-serif;text-anchor:middle;dominant-baseline:central}
+#spd .kmh{font:italic 700 30px "Trebuchet MS",system-ui,sans-serif;fill:#9a9ca3;text-anchor:end}
+#spd .dig{font:italic 900 118px "Arial Black",Impact,sans-serif;text-anchor:end;letter-spacing:-3px}
+#count{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;font:italic 900 clamp(5rem,22vw,12rem) "Arial Black",Impact,sans-serif;color:var(--yel);text-shadow:6px 6px 0 #000;pointer-events:none;z-index:4}
+
+/* HUD: combustível, pneus e avisos de pit */
+#gauges{bottom:14px;left:50%;transform:translateX(-50%);width:clamp(200px,24vw,270px);display:grid;gap:6px}
+.g{display:grid;grid-template-columns:6.2em 1fr 3em;gap:8px;align-items:center;font-size:clamp(.72rem,1.6vw,.9rem)}
+.g em{font-style:normal;text-align:right}
+.gb{height:10px;background:rgba(255,255,255,.14);border-radius:2px;overflow:hidden}
+.gb i{display:block;height:100%;width:100%;background:#6ccf6c}
+.gb i.mid{background:var(--yel)}
+.gb i.lo{background:var(--red);animation:blink .6s steps(2) infinite}
+#nitro{text-align:center;font-size:clamp(.72rem,1.6vw,.85rem);letter-spacing:.06em;padding:3px 0;border:1px solid rgba(255,255,255,.3);border-radius:3px;opacity:.6}
+#nitro.on{opacity:1;background:#2ab3ff;border-color:#2ab3ff;color:#001;animation:blink .25s steps(2) infinite}
+#nitro.no{opacity:.25;text-decoration:line-through}
+#pitMsg{position:absolute;top:62px;left:50%;transform:translateX(-50%);display:none;background:var(--yel);color:#111;padding:8px 16px;border-radius:4px;font-size:clamp(.85rem,2.2vw,1.15rem);white-space:nowrap}
+#pitMsg.on{display:block}
+#pitMsg.warn{animation:blink .7s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+@media (max-width:760px){#gauges{bottom:auto;top:112px;left:12px;transform:none}}
+
+/* Semáforo de largada: 5 colunas com 2 luzes vermelhas, acendem uma coluna por segundo */
+#lights{position:fixed;left:50%;top:16vh;transform:translateX(-50%);display:flex;gap:clamp(6px,1.4vw,14px);padding:clamp(8px,1.6vw,16px);background:#0b0c0e;border:3px solid #2a2d33;border-radius:10px;box-shadow:0 0 0 4px var(--yel),8px 10px 0 rgba(0,0,0,.45);z-index:4;pointer-events:none}
+#lights .lt{display:flex;flex-direction:column;gap:clamp(6px,1.2vw,12px);padding:clamp(5px,.9vw,9px);background:#16181b;border-radius:8px}
+#lights i{display:block;width:clamp(26px,5.2vw,58px);aspect-ratio:1;border-radius:50%;background:#3a0f0f;box-shadow:inset 0 0 0 3px #000}
+#lights .lt.on i{background:radial-gradient(circle at 35% 30%,#ff9a8a,#ff1f10 55%,#a00);box-shadow:inset 0 0 0 3px #000,0 0 22px 6px rgba(255,40,20,.75)}
+#lights.go .lt.on i{background:radial-gradient(circle at 35% 30%,#b6ffb0,#19e03a 55%,#0a8a1e);box-shadow:inset 0 0 0 3px #000,0 0 22px 6px rgba(30,230,70,.75)}   /* largada: luzes verdes */
+
+/* Menu: tabelinha de recordes */
+.stats{border-collapse:collapse;background:rgba(0,0,0,.35);border-left:5px solid var(--yel);border-radius:4px;min-width:min(340px,100%);font-size:.95rem}
+.stats th,.stats td{padding:6px 14px;text-align:left}
+.stats th{color:var(--yel);font-style:italic;letter-spacing:.03em;border-bottom:1px solid rgba(255,255,255,.18)}
+.stats td:last-child,.stats th:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.stats td:last-child{font-weight:700}
+.stats tr:nth-child(odd) td{background:rgba(255,255,255,.05)}
+.stats tr.sum td{border-top:1px solid rgba(255,255,255,.18);color:var(--yel);font-weight:700}
+/* no menu a tabela fica no canto superior direito (espaço livre); em telas estreitas volta para o fluxo normal */
+#menu .stats{position:absolute;right:clamp(16px,4vw,64px);top:clamp(16px,7vh,72px);min-width:0;font-size:.85rem}
+#menu .stats th,#menu .stats td{padding:5px 12px}
+@media (max-width:760px){#menu .stats{position:static;min-width:min(340px,100%);font-size:.95rem}}
+
+/* Faixa de estrada animada no menu */
+.road{position:fixed;left:18px;right:0;bottom:0;height:64px;background:#15171a}
+.road::before{content:"";position:absolute;left:0;right:0;top:29px;height:6px;background:repeating-linear-gradient(90deg,var(--wht) 0 40px,transparent 40px 90px);animation:mv .8s linear infinite}
+.mcar{position:absolute;top:-17px;left:55%;width:132px;height:auto;animation:drive 6s linear infinite}
+.wh{transform-box:fill-box;transform-origin:center;animation:spin .35s linear infinite}
+@keyframes mv{to{background-position:90px 0}}
+@keyframes drive{from{left:-150px}to{left:105%}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media (max-width:600px){nav button{min-width:0;width:100%}.up span{min-width:0}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}

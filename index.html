@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Turbo Racer 3D</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game" class="hide"></canvas>
+
+<!-- HUD (aparece só durante a corrida) -->
+<div id="hud" class="hide">
+  <div class="b" id="hPos">20/20</div>
+  <div class="b" id="hLap">Volta 1/3</div>
+  <div class="b" id="hTime">00:00.0</div>
+  <div class="b" id="hCoins">0 moedas</div>
+  <canvas id="mini" width="180" height="180"></canvas>
+  <div class="b" id="spd" aria-label="Velocímetro">
+    <svg viewBox="24 44 472 402" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <g fill="none" stroke-linecap="butt"><g stroke="#9a9ca3" stroke-width="5"><path d="M66.3 371.5A208 208 0 0 1 41.7 309.0"/><path d="M40.4 302.5A208 208 0 0 1 39.1 235.3"/><path d="M40.2 228.9A208 208 0 0 1 62.4 165.4"/><path d="M65.6 159.7A208 208 0 0 1 108.5 108.0"/><path d="M113.5 103.8A208 208 0 0 1 171.8 70.3"/><path d="M178.0 68.1A208 208 0 0 1 244.3 57.0"/><path d="M250.8 57.1A208 208 0 0 1 316.8 69.8"/><path d="M322.9 72.1A208 208 0 0 1 380.4 107.1"/></g><g stroke="#ff3b3b" stroke-width="8"><path d="M385.3 111.4A208 208 0 0 1 426.9 164.2"/><path d="M430.0 169.9A208 208 0 0 1 450.7 233.9"/></g></g>
+      <g class="tk"><text x="81.6" y="365.9">0</text><text x="56.7" y="302.6">1</text><text x="55.4" y="234.6">2</text><text x="77.9" y="170.5">3</text><text x="121.3" y="118.1">4</text><text x="180.3" y="84.2">5</text><text x="247.3" y="73.0">6</text><text x="314.1" y="85.9">7</text><text x="372.2" y="121.2" class="r">8</text><text x="414.4" y="174.6" class="r">9</text><text x="435.3" y="239.3" class="r">10</text></g>
+      <path d="M196.1 287.8A54 54 0 0 1 289.2 234.0" fill="none" stroke="#6e7178" stroke-width="3" stroke-linecap="round"/>
+      <circle id="spRing" cx="245" cy="265" r="40" fill="none" stroke="#5dff80" stroke-width="4"/>
+      <text id="spGear" x="243" y="265" class="gear" fill="#5dff80">D</text>
+      <line id="spNeedle" x1="245" y1="209" x2="245" y2="60" stroke="#f2f2f2" stroke-width="4" stroke-linecap="round" transform="rotate(-121.7 245 265)"/>
+      <text x="494" y="316" class="kmh">KM/H</text>
+      <text x="474" y="436" class="dig"><tspan id="spZ" fill="#8b8d94">000</tspan><tspan id="spN" fill="#fff"></tspan></text>
+    </svg>
+  </div>
+  <div class="b" id="gauges">
+    <div class="g"><span>Combustível</span><div class="gb"><i id="fuelBar"></i></div><em id="fuelTxt">100%</em></div>
+    <div class="g"><span>Pneus</span><div class="gb"><i id="tireBar"></i></div><em id="tireTxt">100%</em></div>
+    <div id="nitro">NITRO · segure Shift</div>
+  </div>
+  <div id="pitMsg"></div>
+</div>
+<div id="count"></div>
+<!-- Semáforo de largada (5 luzes, como na F1) -->
+<div id="lights" class="hide" aria-hidden="true"><div class="lt"><i></i><i></i></div><div class="lt"><i></i><i></i></div><div class="lt"><i></i><i></i></div><div class="lt"><i></i><i></i></div><div class="lt"><i></i><i></i></div></div>
+
+<!-- Menu principal -->
+<section class="screen on" id="menu">
+  <h1>Turbo<br>Racer</h1>
+  <nav>
+    <button data-go="tracks">Jogar</button>
+    <button data-go="garage">Garagem</button>
+    <button data-go="options">Opções</button>
+  </nav>
+  <table class="stats" aria-label="Seus recordes">
+    <thead><tr><th>Volta mais rápida</th><th>Tempo</th></tr></thead>
+    <tbody id="stBody"></tbody>
+  </table>
+  <p class="hint">Setas ou WASD para dirigir · Espaço: freio de mão (gasta os pneus bem mais rápido) · Shift ou N: nitro (queima combustível 3,5× mais rápido) · Esc: sair da corrida. Você larga em último contra 19 carros mais rápidos: ganhe moedas e melhore o carro na Garagem. Combustível e pneus acabam: entre no pit lane (borda amarela piscando) para reabastecer e trocar pneus em 3 s. A parada é obrigatória.</p>
+  <div class="road">
+    <svg class="mcar" viewBox="0 0 120 36" aria-hidden="true">
+      <rect x="3" y="4" width="14" height="3" fill="#f5f5f0"/><rect x="8" y="7" width="2.4" height="16" fill="#222"/>
+      <path d="M8 23 L14 20 L22 16 L44 14 L54 9 L62 12 L66 17 L88 20 L114 22.5 L114 25 L8 25 Z" fill="#d62828"/>
+      <path d="M24 19 L88 21.4" stroke="#f5f5f0" stroke-width="2"/>
+      <circle cx="58" cy="9.2" r="3.2" fill="#ffc300"/>
+      <path d="M52 12.5 L61 6.6 L66.5 14" fill="none" stroke="#222" stroke-width="1.3"/>
+      <rect x="101" y="23" width="16" height="3" fill="#f5f5f0"/><rect x="114.5" y="18" width="2.4" height="9" fill="#222"/>
+      <g class="wh"><circle cx="26" cy="24" r="9.5" fill="#15171a"/><line x1="20.5" y1="24" x2="31.5" y2="24" stroke="#c9ccd2" stroke-width="2"/></g>
+      <g class="wh"><circle cx="96" cy="25.5" r="8" fill="#15171a"/><line x1="91" y1="25.5" x2="101" y2="25.5" stroke="#c9ccd2" stroke-width="2"/></g>
+    </svg>
+  </div>
+</section>
+
+<!-- Escolha de pista -->
+<section class="screen" id="tracks">
+  <h2>Escolha a pista</h2>
+  <div class="cards">
+    <button class="card c0" data-track="0"><b>Interlagos · Brasil</b><small>Anti-horário, S do Senna, reta oposta e infield travado</small></button>
+    <button class="card c1" data-track="1"><b>Spa-Francorchamps · Bélgica</b><small>O mais longo: La Source, Eau Rouge, Kemmel e Pouhon</small></button>
+    <button class="card c2" data-track="2"><b>Monza · Itália</b><small>Altas velocidades, retas longas e chicanes fechadas</small></button>
+  </div>
+  <button data-go="menu">Voltar</button>
+</section>
+
+<!-- Garagem -->
+<section class="screen" id="garage">
+  <h2>Garagem</h2>
+  <p class="coins"><span id="gCoins">0</span> moedas</p>
+  <canvas id="prev" width="240" height="130"></canvas>
+  <label class="row">Cor do carro <input type="color" id="color"></label>
+  <div class="up"><span>Motor (velocidade máxima)</span><div class="lv" id="lvE"></div><button id="upE"></button></div>
+  <div class="up"><span>Pneus (aderência e curvas)</span><div class="lv" id="lvT"></div><button id="upT"></button></div>
+  <button data-go="menu">Voltar</button>
+</section>
+
+<!-- Opções -->
+<section class="screen" id="options">
+  <h2>Opções</h2>
+  <p>Dificuldade</p>
+  <div class="row"><button data-diff="easy">Fácil</button><button data-diff="normal">Normal</button><button data-diff="hard">Difícil</button></div>
+  <p>Número de voltas</p>
+  <div class="row"><button data-laps="2">2</button><button data-laps="3">3</button><button data-laps="5">5</button></div>
+  <button id="reset" class="danger">Zerar progresso</button>
+  <button data-go="menu">Voltar</button>
+</section>
+
+<!-- Resultado -->
+<section class="screen" id="result">
+  <h2 id="rTitle"></h2>
+  <p id="rInfo"></p>
+  <ol id="rList" class="rl"></ol>
+  <div class="row"><button id="again">Correr de novo</button><button data-go="menu">Menu</button></div>
+</section>
+
+<!-- Three.js r158 (última série com build UMD clássico; removido a partir da r161) -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
